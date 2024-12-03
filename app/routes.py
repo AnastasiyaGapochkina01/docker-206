@@ -1,8 +1,25 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy.sql import text
 from app.models import Book
 from app import db
 
 bp = Blueprint('api', __name__)
+
+@bp.route('/healthcheck', methods=['GET'])
+def healthcheck():
+    try:
+        # Проверка соединения с базой данных
+        db.session.execute(text('SELECT 1'))
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e)
+        }), 500
 
 @bp.route('/books', methods=['GET'])
 def get_books():

@@ -8,16 +8,28 @@ services:
       - FLASK_RUN_HOST=0.0.0.0
       - DATABASE_URL=postgresql://user:password@db/bookstore
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   db:
     image: postgres:13
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=bookstore
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U user -d bookstore'"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
 volumes:
-  postgres_data:
+  pg_data:
